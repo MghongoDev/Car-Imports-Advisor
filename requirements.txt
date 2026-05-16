@@ -1,0 +1,9 @@
+pandas
+numpy
+scikit-learn
+streamlit
+beautifulsoup4
+requests
+sqlalchemy
+joblib
+plotly
