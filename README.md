@@ -1,4 +1,5 @@
-<img width="749" height="499" alt="Screenshot From 2025-05-13 21-19-48" src="https://github.com/user-attachments/assets/3b2d2768-316e-4a29-a576-67c44951fad6" />
+<img width="3244" height="2196" alt="Screenshot From 2025-06-20 00-39-02" src="https://github.com/user-attachments/assets/3d7ddd21-4892-4a70-bff5-acd14c76a29f" />
+
 # Japan Car Import Advisory Platform
 
 A Data Science project that helps Kenyan buyers compare the cost of importing cars from Japan versus buying locally. It uses machine learning to predict Japanese car prices and a custom calculator to estimate KRA taxes and total landed cost.
