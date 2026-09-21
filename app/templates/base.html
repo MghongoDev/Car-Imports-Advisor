@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Car Imports Advisor{% endblock %}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="brand">🚗 Car Imports Advisor</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/dashboard">Compare Dashboard</a>
+      <a href="/comparisons">Local vs Import</a>
+      <a href="/predict-page">Predict & Calculate</a>
+      <a href="/price-movements">Price Movements</a>
+      <a href="/docs">API Docs</a>
+    </div>
+  </nav>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer">
+    <small>
+      Data: scraped marketplace listings (see robots.txt status on /api/robots-status) ·
+      Estimates only — verify duties with KRA.
+    </small>
+  </footer>
+</body>
+</html>

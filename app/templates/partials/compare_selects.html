@@ -1,0 +1,27 @@
+{# Cascading model/year selects; re-rendered by /dashboard/options on change. #}
+{% if models %}
+<label for="sel-model">Model</label>
+<select id="sel-model" name="model"
+        hx-get="/dashboard/options"
+        hx-target="#dyn-selects"
+        hx-trigger="change"
+        hx-include="#compare-form">
+  <option value="">— choose model —</option>
+  {% for m in models %}
+  <option value="{{ m }}" {% if m == selected_model %}selected{% endif %}>{{ m }}</option>
+  {% endfor %}
+</select>
+{% else %}
+<span class="muted">Choose a make to see models.</span>
+{% endif %}
+
+{% if years %}
+<label for="sel-year">Year of manufacture</label>
+<select id="sel-year" name="year">
+  {% for y in years %}
+  <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+  {% endfor %}
+</select>
+{% else %}
+<span class="muted">Choose a model to see import-eligible years.</span>
+{% endif %}

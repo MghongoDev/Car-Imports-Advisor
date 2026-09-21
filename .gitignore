@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Generated artifacts (models and local DB are produced by the pipeline)
+models/*.pkl
+models/runs.json
+models/latest_model.txt
+data/*.db
+data/*.db-journal

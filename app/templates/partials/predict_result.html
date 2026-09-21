@@ -1,0 +1,41 @@
+{% if error %}
+<div class="error-panel">{{ error }}</div>
+{% else %}
+<div class="result-card">
+  <h2>Result</h2>
+  <p class="big-number">
+    ¥{{ "{:,.0f}".format(predicted_jpy) }}
+    <span class="muted">≈ KES {{ "{:,}".format(predicted_kes) }} (at 0.95 fallback rate)</span>
+  </p>
+
+  <h3>Cost breakdown (KES)</h3>
+  <table class="data-table narrow">
+    <tbody>
+      <tr><td>CIF (FOB + freight + insurance)</td><td>{{ "{:,}".format(costs.cif_kes) }}</td></tr>
+      <tr><td>Import duty (25%)</td><td>{{ "{:,}".format(costs.import_duty_kes) }}</td></tr>
+      <tr><td>Excise duty ({{ "%.0f"|format(costs.excise_rate * 100) }}%)</td><td>{{ "{:,}".format(costs.excise_duty_kes) }}</td></tr>
+      <tr><td>VAT (16%)</td><td>{{ "{:,}".format(costs.vat_kes) }}</td></tr>
+      <tr><td>IDF (3.5%)</td><td>{{ "{:,}".format(costs.idf_kes) }}</td></tr>
+      <tr><td>RDL (2%)</td><td>{{ "{:,}".format(costs.rdl_kes) }}</td></tr>
+      <tr><td>Port, clearing & registration</td><td>{{ "{:,}".format(costs.fixed_charges_kes) }}</td></tr>
+      <tr class="total-row">
+        <td><strong>Total landed cost</strong></td>
+        <td><strong>{{ "{:,}".format(costs.total_landed_cost_kes) }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  {% if difference_kes is not none and local_price_kes %}
+    {% if difference_kes > 0 %}
+    <p class="verdict save">✅ Importing saves ≈ KES {{ "{:,}".format(difference_kes) }}</p>
+    {% else %}
+    <p class="verdict avoid">⚠️ Buying locally is cheaper by ≈ KES {{ "{:,}".format(-difference_kes) }}</p>
+    {% endif %}
+  {% endif %}
+
+  <p class="muted">
+    FX rate used: {{ costs.exchange_rate }} {% if costs.fx_is_estimate %}(documented estimate){% endif %}
+    · Rates last reviewed: {{ costs.rates_last_reviewed }}
+  </p>
+</div>
+{% endif %}

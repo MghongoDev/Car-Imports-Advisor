@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pylint
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Lint (pylint)
+        run: python -m pylint src app scripts --fail-under=9.0
+
+  neon-smoke:
+    # Proves the DATABASE_URL secret really connects to the Neon Postgres
+    # database: creates the schema and reads back the table list. Skips
+    # silently on PRs from forks, where secrets are unavailable.
+    runs-on: ubuntu-latest
+    needs: test
+    if: ${{ github.event_name == 'push' || !github.event.pull_request.head.repo.fork }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Smoke-test Neon connection and schema
+        run: |
+          python - <<'PY'
+          import sys
+          from sqlalchemy import text
+          from src.db_utils import get_engine, init_db
+
+          engine = get_engine()
+          if engine.dialect.name != "postgresql":
+              sys.exit("DATABASE_URL is not a Postgres URL — aborting smoke test.")
+          init_db()
+          with engine.connect() as conn:
+              tables = sorted(
+                  r[0] for r in conn.execute(
+                      text("SELECT tablename FROM pg_tables WHERE schemaname='public'")
+                  )
+              )
+          required = {"listings", "listings_history", "price_events", "pipeline_runs"}
+          missing = required - set(tables)
+          if missing:
+              sys.exit(f"Missing tables after init_db: {missing}")
+          print(f"Neon smoke OK — tables present: {', '.join(sorted(required))}")
+          PY

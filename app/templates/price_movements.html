@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Price Movements — Car Imports Advisor{% endblock %}
+{% block content %}
+<h1>Price Movements</h1>
+<p class="muted">
+  Detected by the CDC pipeline: every scrape is diffed against the previous
+  observation (content hash + append-only history).
+</p>
+{% if events %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Listing</th><th>Old (KES)</th><th>New (KES)</th>
+      <th>Change</th><th>%</th><th>Detected</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for event in events %}
+    <tr>
+      <td><a href="/api/listings/{{ event.listing_id }}/history">{{ event.listing_id }}</a></td>
+      <td>{{ "{:,}".format(event.old_price_kes) if event.old_price_kes else "—" }}</td>
+      <td>{{ "{:,}".format(event.new_price_kes) }}</td>
+      <td class="{{ 'down' if event.delta_kes < 0 else 'up' }}">{{ "{:,}".format(event.delta_kes) }}</td>
+      <td class="{{ 'down' if event.delta_pct < 0 else 'up' }}">{{ "%.1f"|format(event.delta_pct) }}%</td>
+      <td>{{ event.detected_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">
+  No price changes detected yet. Events appear here after the pipeline has
+  observed the same listing at least twice with different prices.
+</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+[MASTER]
+ignore=venv,.venv
+
+[MESSAGES CONTROL]
+# too-few-public-methods: small schema/scraper classes are intentionally minimal.
+# duplicate-code: pipeline stages share intentional structural similarity.
+disable=too-few-public-methods,duplicate-code
+
+[REPORTS]
+output-format=colorized
+reports=no
+score=yes
+
+[FORMAT]
+max-line-length=100
+indent-string='    '
+
+[BASIC]
+# Allow domain-style short names used across the project.
+good-names=i,j,k,df,ex,fp,id,lr,rf,cc,e
+
+[DESIGN]
+max-args=8
+max-locals=20
+max-attributes=10
+max-branches=15
+max-statements=60
+
+[SIMILARITIES]
+min-similarity-lines=8
+
+[TYPECHECK]
+# Pylint cannot infer dynamically-registered FastAPI/pydantic members.
+ignored-modules=pydantic
+
+[EXCEPTIONS]
+# We log-and-continue in scraper loops by design; broad excepts are documented.
+overgeneral-exceptions=builtins.BaseException

@@ -1,0 +1,144 @@
+:root {
+  --bg: #f7f8fa;
+  --card: #ffffff;
+  --text: #1c2430;
+  --muted: #6b7684;
+  --accent: #0f6b5f;
+  --accent-soft: #e2f3ef;
+  --down: #b3261e;
+  --up: #1a7f37;
+  --border: #dfe3e8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 2rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.brand { font-weight: 700; color: var(--accent); text-decoration: none; font-size: 1.1rem; }
+.nav-links a { margin-left: 1.2rem; color: var(--text); text-decoration: none; }
+.nav-links a:hover { color: var(--accent); }
+
+.container { max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+
+.hero h1 { margin-bottom: 0.3rem; }
+.hero p { color: var(--muted); max-width: 46rem; }
+
+.health-cards { display: flex; gap: 1rem; margin: 1.2rem 0; flex-wrap: wrap; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  min-width: 180px;
+}
+.card p { margin: 0.3rem 0 0; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.data-table th, .data-table td {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.data-table th { background: var(--accent-soft); color: var(--accent); }
+.data-table.narrow { max-width: 480px; }
+.total-row td { background: var(--accent-soft); }
+
+.down { color: var(--down); font-weight: 600; }
+.up { color: var(--up); font-weight: 600; }
+.muted { color: var(--muted); }
+
+.predict-form { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.9rem; }
+.predict-form label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.9rem; }
+.predict-form input, .predict-form select {
+  padding: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+.predict-form button {
+  margin-top: 1rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.4rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.predict-form button:hover { filter: brightness(1.08); }
+
+.result-panel { margin-top: 1.2rem; }
+.result-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+.big-number { font-size: 1.6rem; font-weight: 700; color: var(--accent); margin: 0.4rem 0; }
+.big-number .muted { font-size: 0.95rem; font-weight: 400; }
+.verdict { font-size: 1.05rem; font-weight: 600; }
+.verdict.save { color: var(--up); }
+.verdict.avoid { color: var(--down); }
+td.save { color: var(--up); font-weight: 600; }
+td.avoid { color: var(--down); font-weight: 600; }
+td.save small, td.avoid small { font-weight: 400; }
+.small { font-size: 0.85rem; }
+.error-panel { background: #fdecea; border: 1px solid #f5c6c2; color: var(--down); border-radius: 8px; padding: 1rem; }
+
+.footer { text-align: center; padding: 1rem; color: var(--muted); border-top: 1px solid var(--border); }
+
+/* === Compare dashboard === */
+.compare-form .selects {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.compare-form label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+.compare-form select {
+  min-width: 12rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  font-size: 1rem;
+}
+
+.compare-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; margin-top: 1rem; }
+.compare-grid { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
+.price-box {
+  flex: 1 1 200px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.price-box .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.price-box .amount { font-size: 1.35rem; font-weight: 700; }
+.price-box .sub { font-size: 0.85rem; color: var(--muted); }
+.price-box.local { border-top: 4px solid var(--accent); }
+.price-box.import { border-top: 4px solid #b06a00; }
+.price-box.verdict.save { border-top: 4px solid var(--up); }
+.price-box.verdict.costly { border-top: 4px solid var(--down); }
+
+.help-box { margin-top: 2rem; font-size: 0.92rem; color: var(--muted); }
+.help-box h2 { font-size: 1rem; color: var(--text); }

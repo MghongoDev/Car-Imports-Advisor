@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Compare Dashboard — Car Imports Advisor{% endblock %}
+{% block content %}
+<h1>Compare a Car: Local vs Import</h1>
+<p class="muted">
+  Pick a car from the latest local (Jiji) scrape and the dashboard finds the
+  closest import-eligible unit on the Japan exporters, estimates the full
+  landed cost (freight + KRA duties + port charges) and shows the difference.
+</p>
+
+<form id="compare-form" class="compare-form">
+  <div class="selects">
+    <div>
+      <label for="sel-make">Make</label>
+      <select id="sel-make" name="make"
+              hx-get="/dashboard/options"
+              hx-target="#dyn-selects"
+              hx-include="#compare-form"
+              hx-trigger="change">
+        <option value="">— choose make —</option>
+        {% for m in makes %}
+        <option value="{{ m }}" {% if m == selected_make %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    {# Model/year selects re-render in place; the make select above stays. #}
+    <div id="dyn-selects">
+      {% include "partials/compare_selects.html" %}
+    </div>
+  </div>
+</form>
+
+<div id="compare-result"
+     hx-get="/dashboard/result"
+     hx-trigger="change from:#sel-year"
+     hx-include="#compare-form">
+  <p class="muted">Choose a make, model and year to compare.</p>
+</div>
+
+<section class="help-box">
+  <h2>How this works</h2>
+  <ul>
+    <li>Only makes/models/years seen in the latest scrape appear — no guessing.</li>
+    <li>Year choices start at <strong>{{ min_year }}</strong>: Kenya (KEBS/BVRS)
+        bars vehicles more than 8 years old from import, so the selectable
+        range rolls forward automatically each year.</li>
+    <li>The Japan side is the closest exporter listing (same make, matching
+        model tokens, year within ±1) — unmatched picks are reported as
+        "no comparable import found", never force-matched.</li>
+    <li>Landed cost = exporter price + Roro freight (est.) + marine insurance
+        + KRA duties (IDA/CET/RDL) + port, clearing and registration fees.</li>
+  </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: car-imports-advisor
+    runtime: python
+    plan: free
+    # One service serves both the JSON API and the Jinja2 frontend.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      # Postgres runs on Neon (free tier): create the database at neon.tech,
+      # then sync the connection string into this service's DATABASE_URL.
+      # (Render "Env Sync" can pull it straight from a linked env group, or
+      # paste it in the dashboard — it is secret, so it is not committed.)
+      - key: DATABASE_URL
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12"

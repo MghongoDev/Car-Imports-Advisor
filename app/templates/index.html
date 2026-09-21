@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Home — Car Imports Advisor{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Japan → Kenya Import Advisor</h1>
+  <p>
+    Compare the landed cost of importing a car from Japan against local
+    marketplace prices, backed by scraped listings and CDC price tracking.
+  </p>
+  <div class="health-cards">
+    <div class="card">
+      <strong>Last scrape</strong>
+      <p>{{ last_scrape or "never — trigger one via the API" }}</p>
+    </div>
+    <div class="card">
+      <strong>Pipeline status</strong>
+      <p>{{ scrape_status }}</p>
+    </div>
+    <div class="card">
+      <strong>Served model</strong>
+      <p>{{ model_version }}</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Latest listings</h2>
+  {% if listings %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Make</th><th>Model</th><th>Year</th><th>Mileage (km)</th>
+        <th>Price (KES)</th><th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in listings %}
+      <tr>
+        <td>{{ item.make }}</td>
+        <td>{{ item.model }}</td>
+        <td>{{ item.year }}</td>
+        <td>{{ item.mileage_km or "—" }}</td>
+        <td>{{ "{:,}".format(item.price_kes) if item.price_kes else "—" }}</td>
+        <td>{{ item.source }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">
+    No listings yet. Run <code>python scripts/run_pipeline.py</code> or
+    POST to <code>/api/admin/trigger-scrape</code> to populate the database.
+  </p>
+  {% endif %}
+</section>
+{% endblock %}

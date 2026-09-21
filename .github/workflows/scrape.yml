@@ -1,0 +1,26 @@
+name: Scheduled scrape & CDC pipeline
+
+on:
+  schedule:
+    # Every 6 hours. Free for public repos; minutes are generous for one job.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}  # allows manual runs from the Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scrape -> validate -> store -> CDC pipeline
+        run: python scripts/run_pipeline.py --pages 2

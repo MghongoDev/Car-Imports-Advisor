@@ -1,0 +1,55 @@
+{% if result %}
+<div class="compare-card">
+  <h2>{{ result.make }} {{ result.model }} · {{ result.year }}</h2>
+
+  <div class="compare-grid">
+    <div class="price-box local">
+      <span class="label">Buy local (Jiji)</span>
+      <span class="amount">KSh {{ "{:,}".format(result.local_price_kes) }}</span>
+      <a href="{{ result.local_url }}" target="_blank" rel="noopener">view listing ↗</a>
+    </div>
+    <div class="price-box import">
+      <span class="label">Import via {{ result.import_source }}</span>
+      <span class="amount">KSh {{ "{:,}".format(result.total_landed_cost_kes) }}</span>
+      <span class="sub">landed in Kenya, all-in</span>
+      <a href="{{ result.import_url }}" target="_blank" rel="noopener">view listing ↗</a>
+    </div>
+    <div class="price-box verdict {{ 'save' if result.difference_kes > 0 else 'costly' }}">
+      <span class="label">Verdict</span>
+      <span class="amount">{{ "+" if result.difference_kes > 0 else "" }}KSh {{ "{:,}".format(result.difference_kes) }}</span>
+      <span class="sub">
+        {% if result.difference_kes > 0 %}
+        importing saves {{ result.difference_pct }}% vs local
+        {% else %}
+        buying local saves {{ result.difference_pct | abs }}%
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <details class="breakdown">
+    <summary>Cost breakdown (import side)</summary>
+    <table class="data-table">
+      <tr><th>Exporter price ({{ result.import_source }})</th><td>KSh {{ "{:,}".format(result.import_price_kes) }}</td></tr>
+      <tr><th>Freight Japan → Mombasa (est.)</th><td>KSh {{ "{:,}".format(result.freight_kes) }}</td></tr>
+      <tr><th>Marine insurance</th><td>included in CIF (KSh {{ "{:,}".format(result.cif_kes) }})</td></tr>
+      <tr><th>KRA duties &amp; taxes (IDA + CET + RDL)</th><td>KSh {{ "{:,}".format(result.total_taxes_kes) }}</td></tr>
+      <tr><th>Port, clearing &amp; registration</th><td>KSh {{ "{:,}".format(result.fixed_charges_kes) }}</td></tr>
+      <tr class="total-row"><th>Total landed cost</th><td>KSh {{ "{:,}".format(result.total_landed_cost_kes) }}</td></tr>
+    </table>
+    <p class="muted">Freight and clearing are documented estimates; confirm duties with KRA before buying.</p>
+  </details>
+</div>
+{% else %}
+<div class="compare-card empty">
+  {% if make and model %}
+  <h2>{{ make }} {{ model }}{% if year %} · {{ year }}{% endif %}</h2>
+  <p>No comparable import found in the latest scrape.
+     The year must be within the 8-year import window and an exporter unit
+     of the same model must exist — try another year or check back after
+     the next pipeline run.</p>
+  {% else %}
+  <p class="muted">Choose a make, model and year to compare.</p>
+  {% endif %}
+</div>
+{% endif %}

@@ -1,68 +1,133 @@
-def calculate_import_cost(price_jpy, engine_cc, freight_jpy=250000):
+"""Kenya import cost calculator (KRA duties and levies).
+
+All rates are explicit, cited module constants so reviewers can trace every
+number. Update ``RATES_LAST_REVIEWED`` whenever the rates are re-checked
+against the linked sources.
+"""
+
+from typing import Any, Dict, Optional
+
+from src.fx import DEFAULT_JPY_KES_RATE, fetch_exchange_rate, jpy_to_kes
+
+# --- Cited rate constants ---------------------------------------------------
+# Sources (checked 2026-09):
+#   * Import Duty 25%: EAC Common External Tariff (KRA customs tariff, motor
+#     cars HS 8703) — https://www.kra.go.ke/customs/import-duty
+#   * Excise Duty: Excise Duty Act 2013 & KRA notices — 20% (<=1500cc),
+#     30% (1501-2500cc), 35% (>2500cc) on (CIF + Import Duty).
+#   * VAT 16%: VAT Act 2013 on (CIF + Import Duty + Excise Duty).
+#   * IDF 3.5% of CIF: KRA Import Declaration Fee.
+#   * RDL 2% of CIF: Railway Development Levy (Railways Act 2012).
+RATES_LAST_REVIEWED = "2026-09"
+IMPORT_DUTY_RATE = 0.25
+VAT_RATE = 0.16
+IDF_RATE = 0.035
+RDL_RATE = 0.02
+INSURANCE_RATE = 0.015  # 1.5% of FOB, standard KRA valuation practice
+
+# Excise bands by engine capacity (cc).
+EXCISE_BANDS = ((1500, 0.20), (2500, 0.30))
+EXCISE_DEFAULT_RATE = 0.35
+
+# Fixed on-the-ground estimates (KES).
+PORT_CHARGES_KES = 50_000
+CLEARING_AGENT_KES = 35_000
+REGISTRATION_KES = 15_000
+
+DEFAULT_FREIGHT_JPY = 250_000
+
+
+def excise_rate_for(engine_cc: int) -> float:
+    """Return the excise duty rate for an engine capacity in cc."""
+    for upper, rate in EXCISE_BANDS:
+        if engine_cc <= upper:
+            return rate
+    return EXCISE_DEFAULT_RATE
+
+
+def calculate_from_cif(cif_kes: int, engine_cc: int) -> Dict[str, Any]:
+    """Compute KRA duties from a CIF value in KES.
+
+    Used both by :func:`calculate_import_cost` (JPY input path) and by the
+    comparison layer (USD/JPY exporter listings already in KES).
     """
-    Calculates the total cost of importing a car to Kenya based on KRA rules.
-    
-    Args:
-        price_jpy (int): FOB Price of the car in JPY
-        engine_cc (int): Engine capacity in CC
-        freight_jpy (int): Estimated shipping cost (default 250k JPY)
-    
-    Returns:
-        dict: Breakdown of costs
-    """
-    
-    # Exchange Rate (Approximate: 1 JPY = 0.95 KES)
-    EXCHANGE_RATE = 0.95
-    
-    # 1. Convert to KES
-    fob_kes = price_jpy * EXCHANGE_RATE
-    freight_kes = freight_jpy * EXCHANGE_RATE
-    insurance_kes = fob_kes * 0.015 # Insurance is usually 1.5% of FOB
-    
-    # CIF Value (Cost, Insurance, Freight)
-    cif_kes = fob_kes + freight_kes + insurance_kes
-    
-    # 2. Import Duty (25% of CIF)
-    import_duty = 0.25 * cif_kes
-    
-    # 3. Excise Duty (Based on Engine Size)
-    # Base for Excise = CIF + Import Duty
-    excise_base = cif_kes + import_duty
-    
-    if engine_cc <= 1500:
-        excise_rate = 0.20
-    elif 1500 < engine_cc <= 2500:
-        excise_rate = 0.30
-    else:
-        excise_rate = 0.35
-        
-    excise_duty = excise_base * excise_rate
-    
-    # 4. VAT (16% of CIF + Import Duty + Excise Duty)
-    vat_base = cif_kes + import_duty + excise_duty
-    vat = 0.16 * vat_base
-    
-    # 5. IDF (Import Declaration Fee) - 3.5% of CIF
-    idf = 0.035 * cif_kes
-    
-    # 6. RDL (Railway Development Levy) - 2% of CIF
-    rdl = 0.02 * cif_kes
-    
-    # 7. Estimated Port & Clearance Fees (Fixed estimates)
-    port_charges = 50000 # KES
-    clearing_agent = 35000 # KES
-    registration = 15000 # KES (NTSA)
-    
-    # TOTALS
-    total_taxes = import_duty + excise_duty + vat + idf + rdl
-    total_landed_cost = cif_kes + total_taxes + port_charges + clearing_agent + registration
-    
+    import_duty_kes = int(round(cif_kes * IMPORT_DUTY_RATE))
+    excise_rate = excise_rate_for(engine_cc)
+    excise_duty_kes = int(round((cif_kes + import_duty_kes) * excise_rate))
+    vat_kes = int(round((cif_kes + import_duty_kes + excise_duty_kes) * VAT_RATE))
+    idf_kes = int(round(cif_kes * IDF_RATE))
+    rdl_kes = int(round(cif_kes * RDL_RATE))
+    total_taxes_kes = import_duty_kes + excise_duty_kes + vat_kes + idf_kes + rdl_kes
     return {
-        "CIF (KES)": round(cif_kes),
-        "Import Duty (KES)": round(import_duty),
-        "Excise Duty (KES)": round(excise_duty),
-        "VAT (KES)": round(vat),
-        "IDF & RDL (KES)": round(idf + rdl),
-        "Port & Clearing (KES)": port_charges + clearing_agent + registration,
-        "Total Landed Cost (KES)": round(total_landed_cost)
+        "import_duty_kes": import_duty_kes,
+        "excise_duty_kes": excise_duty_kes,
+        "excise_rate": excise_rate,
+        "vat_kes": vat_kes,
+        "idf_kes": idf_kes,
+        "rdl_kes": rdl_kes,
+        "total_taxes_kes": total_taxes_kes,
+    }
+
+
+def calculate_import_cost(
+    price_jpy: int,
+    engine_cc: int,
+    freight_jpy: int = DEFAULT_FREIGHT_JPY,
+    use_live_fx: bool = False,
+    fx_rate: Optional[float] = None,
+) -> Dict[str, Any]:
+    """Compute the full KES landed-cost breakdown for one car.
+
+    Args:
+        price_jpy: FOB price in JPY (e.g. a model prediction).
+        engine_cc: Engine displacement in cc (selects the excise band).
+        freight_jpy: Estimated shipping cost to Mombasa in JPY.
+        use_live_fx: When True, fetch a live JPY->KES rate (falls back to
+            the documented constant, logged as an estimate).
+        fx_rate: Explicitly provided JPY->KES rate; overrides live fetching.
+
+    Returns:
+        Dict with snake_case keys (API-friendly) including every tax line,
+        fixed charges, ``total_landed_cost_kes``, and the FX rate used.
+    """
+    rate = fx_rate
+    if rate is not None:
+        rate_is_fallback = False
+    elif use_live_fx:
+        rate, rate_is_fallback = fetch_exchange_rate()
+    else:
+        rate, rate_is_fallback = DEFAULT_JPY_KES_RATE, True
+
+    fob_kes = jpy_to_kes(price_jpy, rate)
+    freight_kes = jpy_to_kes(freight_jpy, rate)
+    insurance_kes = int(round(fob_kes * INSURANCE_RATE))
+
+    cif_kes = fob_kes + freight_kes + insurance_kes
+
+    duties = calculate_from_cif(cif_kes, engine_cc)
+    total_taxes_kes = duties["total_taxes_kes"]
+
+    fixed_charges_kes = PORT_CHARGES_KES + CLEARING_AGENT_KES + REGISTRATION_KES
+    total_landed_cost_kes = cif_kes + total_taxes_kes + fixed_charges_kes
+
+    return {
+        "fob_kes": fob_kes,
+        "freight_kes": freight_kes,
+        "insurance_kes": insurance_kes,
+        "cif_kes": cif_kes,
+        "import_duty_kes": duties["import_duty_kes"],
+        "excise_duty_kes": duties["excise_duty_kes"],
+        "excise_rate": duties["excise_rate"],
+        "vat_kes": duties["vat_kes"],
+        "idf_kes": duties["idf_kes"],
+        "rdl_kes": duties["rdl_kes"],
+        "port_charges_kes": PORT_CHARGES_KES,
+        "clearing_agent_kes": CLEARING_AGENT_KES,
+        "registration_kes": REGISTRATION_KES,
+        "total_taxes_kes": duties["total_taxes_kes"],
+        "fixed_charges_kes": fixed_charges_kes,
+        "total_landed_cost_kes": total_landed_cost_kes,
+        "exchange_rate": rate,
+        "fx_is_estimate": rate_is_fallback,
+        "rates_last_reviewed": RATES_LAST_REVIEWED,
     }

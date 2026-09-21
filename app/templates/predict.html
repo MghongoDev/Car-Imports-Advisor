@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Predict & Calculate — Car Imports Advisor{% endblock %}
+{% block content %}
+<h1>Predict & Calculate Import Cost</h1>
+<p class="muted">
+  The model predicts the FOB price in Japan (JPY); the calculator applies
+  KRA import duties to estimate the total landed cost in KES.
+</p>
+<form hx-post="/predict-result" hx-target="#result" class="predict-form">
+  <div class="form-grid">
+    <label>Make
+      <select name="make">
+        <option>Toyota</option><option>Honda</option><option>Nissan</option>
+        <option>Mazda</option><option>Subaru</option><option>Mitsubishi</option>
+      </select>
+    </label>
+    <label>Model <input type="text" name="model" value="Axio" required></label>
+    <label>Year
+      <input type="number" name="year" value="2020" min="2010" max="2026" required>
+    </label>
+    <label>Mileage (km)
+      <input type="number" name="mileage_km" value="30000" min="0" max="300000" required>
+    </label>
+    <label>Engine (cc)
+      <select name="engine_cc">
+        <option>660</option><option>1000</option><option>1300</option>
+        <option selected>1500</option><option>1800</option><option>2000</option>
+        <option>2500</option><option>3000</option>
+      </select>
+    </label>
+    <label>Fuel
+      <select name="fuel_type">
+        <option>Petrol</option><option>Diesel</option><option>Hybrid</option>
+      </select>
+    </label>
+    <label>Transmission
+      <select name="transmission">
+        <option>Automatic</option><option>Manual</option>
+      </select>
+    </label>
+    <label>Body
+      <select name="body_type">
+        <option>Sedan</option><option>Hatchback</option><option>SUV</option><option>Wagon</option>
+      </select>
+    </label>
+    <label>Local price (KES, optional)
+      <input type="number" name="local_price_kes" value="0" min="0" max="20000000">
+    </label>
+  </div>
+  <button type="submit">Predict & Calculate</button>
+</form>
+<div id="result" class="result-panel"></div>
+{% endblock %}

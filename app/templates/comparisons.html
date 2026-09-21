@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Local vs Import — Car Imports Advisor{% endblock %}
+{% block content %}
+<h1>Local vs Import Comparison</h1>
+<p class="muted">
+  Cars available both locally (Jiji) and from Japan-side exporters, matched
+  by make and model year. The import column estimates the full landed cost:
+  exporter price + shipping to Mombasa + KRA duties (import, excise, VAT,
+  IDF, RDL) + port/clearing fees. A positive difference means importing that
+  specific unit would cost less than the local asking price.
+</p>
+
+{% if rows %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Car</th><th>Year</th>
+      <th>Local (Jiji)</th><th>Import from</th>
+      <th>Exporter price</th><th>Freight</th><th>Duties</th>
+      <th>Landed total</th><th>Difference</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.make }} {{ row.model[:24] }}</td>
+      <td>{{ row.year }}</td>
+      <td>KSh {{ "{:,}".format(row.local_price_kes) }}</td>
+      <td>{{ row.import_source }}</td>
+      <td>KSh {{ "{:,}".format(row.import_price_kes) }}</td>
+      <td>KSh {{ "{:,}".format(row.freight_kes) }}</td>
+      <td>KSh {{ "{:,}".format(row.total_taxes_kes) }}</td>
+      <td><strong>KSh {{ "{:,}".format(row.total_landed_cost_kes) }}</strong></td>
+      <td class="{{ 'save' if row.difference_kes > 0 else 'avoid' }}">
+        {% if row.difference_kes > 0 %}save KSh {{ "{:,}".format(row.difference_kes) }}
+        {% else %}costs KSh {{ "{:,}".format(-row.difference_kes) }} more{% endif %}
+        <small>({{ "%.1f"|format(row.difference_pct) }}%)</small>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="muted small">
+  Freight uses a documented estimate of US$1,600 per unit (plus US$200 above
+  3000cc); FX rates are fetched live with documented fallbacks, flagged in
+  the API response. Verify any figure independently before purchasing.
+</p>
+{% else %}
+<p class="muted">
+  No comparable pairs yet. Run the pipeline
+  (<code>python scripts/run_pipeline.py --pages 2</code>) so both local and
+  exporter listings are in the database — comparisons appear when the same
+  make/model/year exists on both sides.
+</p>
+{% endif %}
+{% endblock %}
